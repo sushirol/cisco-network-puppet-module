@@ -130,7 +130,7 @@ if ARGV.empty?
 end
 
 GSUTILITY = '/isan/bin/guestshell'
-TMP_PUPPET_LOCATION = '/bootflash/tmp_puppet'
+TMP_PUPPET_LOCATION = '/harddisk:/tmp_puppet'
 PUPPET_PATH = '/opt/puppetlabs/puppet'
 
 # -------------------------#
