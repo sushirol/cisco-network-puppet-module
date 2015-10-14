@@ -79,8 +79,8 @@ EOF"
   def self.create_service_manifest_nondefaults
     manifest_str = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
 node default {
-    service { 'syslog':
-        name            => 'syslog',
+    service { 'bootlog':
+        name            => 'bootlogd',
         ensure          => 'running',
         enable          => 'true',
     }
@@ -96,8 +96,8 @@ EOF"
   def self.create_service_manifest_stopped
     manifest_str = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
 node default {
-    service { 'syslog':
-        name            => 'syslog',
+    service { 'bootlog':
+        name            => 'bootlogd',
         ensure          => 'stopped',
     }
 }
@@ -146,11 +146,11 @@ EOF"
   def self.create_package_sample_manifest_present
     manifest_str = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
 node default {
-    package { 'n9000_sample.x86_64':
-        name            => 'n9000_sample-1.0.0-7.0.3.x86_64.rpm',
+    package { 'chef':
+        name            => 'chef-12.4.1+20150910004954-1.ios_xr6.x86_64',
         ensure          => present,
-        provider        => 'nxapi',
-        source          => '/bootflash/n9000_sample-1.0.0-7.0.3.x86_64.rpm',
+        provider        => 'rpm',
+        source          => '/harddisk:/chef-12.4.1+20150910004954-1.ios_xr6.x86_64.rpm',
         package_settings => {'target' => 'host'},
     }
 }
@@ -165,11 +165,11 @@ EOF"
   def self.create_package_sample_manifest_absent
     manifest_str = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
 node default {
-    package { 'n9000_sample.x86_64':
-        name            => 'n9000_sample-1.0.0-7.0.3.x86_64.rpm',
+    package { 'chef':
+        name            => 'chef-12.4.1+20150910004954-1.ios_xr6.x86_64',
         ensure          => absent,
-        provider        => 'nxapi',
-        source          => '/bootflash/n9000_sample-1.0.0-7.0.3.x86_64.rpm',
+        provider        => 'rpm',
+        source          => '/harddisk:/chef-12.4.1+20150910004954-1.ios_xr6.x86_64.rpm',
         package_settings => {'target' => 'host'},
     }
 }
