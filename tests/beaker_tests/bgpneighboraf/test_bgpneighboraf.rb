@@ -70,419 +70,169 @@ UtilityLib.set_manifest_path(master, self)
 # Top-level keys set by caller:
 # tests[:master] - the master object
 # tests[:agent] - the agent object
-# tests[:show_cmd] - the common show command to use for test_show_run
 #
 tests = {
-  :master   => master,
-  :agent    => agent,
-  :show_cmd => 'show run bgp all',
-}
+  master:               master,
+  agent:                agent,
+  default_value_tests:  {
+    'IPv4 Unicast' => {
+      title_pattern: '2 default 1.1.1.1 ipv4 unicast',
+      inputs:        {
+	'allowas_in'                  => 'default',
+        'allowas_in_max'              => 'default',
+        'default_originate'           => 'default',
+        'default_originate_route_map' => 'default',
+        'disable_peer_as_check'       => 'default',
+        'max_prefix_limit'            => 'default',
+        'max_prefix_threshold'        => 'default',
+        'max_prefix_interval'         => 'default',
+        'next_hop_self'               => 'default',
+        'next_hop_third_party'        => 'default',
+        'route_reflector_client'      => 'default',
+        'send_community'              => 'default',
+        'suppress_inactive'           => 'default',
+        'unsuppress_map'              => 'default',
+        'weight'                      => 'default',
+      },
+      outputs:       {
+        'additional_paths_receive' => 'inherit',
+        'additional_paths_send'    => 'inherit',
+        'allowas_in'               => 'false',
+        'allowas_in_max'           => '3',
+        'as_override'              => 'false',
+        'default_originate'        => 'false',
+        'disable_peer_as_check'    => 'false',
+        'next_hop_self'            => 'false',
+        'next_hop_third_party'     => 'true',
+        'route_reflector_client'   => 'false',
+        'send_community'           => 'none',
+        'soft_reconfiguration_in'  => 'inherit',
+        'suppress_inactive'        => 'false',
+      },
+    },
+    'L2VPN' => {
+      title_pattern: '2 default 1.1.1.1 l2vpn evpn',
+      inputs:        {
+        'allowas_in'                  => 'default',
+        'allowas_in_max'              => 'default',
+        'disable_peer_as_check'       => 'default',
+        'max_prefix_limit'            => 'default',
+        'max_prefix_threshold'        => 'default',
+        'max_prefix_interval'         => 'default',
+        'route_reflector_client'      => 'default',
+        'send_community'              => 'default',
+      },
+      outputs:       {
+        'allowas_in'              => 'false',
+        'allowas_in_max'          => '3',
+        'disable_peer_as_check'   => 'false',
+        'route_reflector_client'  => 'false',
+        'send_community'          => 'none',
+        'soft_reconfiguration_in' => 'inherit',
+      },
+    },
+  },
+  explicit_value_tests: {
+    'IPv4 Unicast' => {
+      title_pattern: '2 blue 1.1.1.1 ipv4 unicast',
+      values: [
+        {
+          'allowas_in' => true,
+          'allowas_in_max' => 5,
+        },
+        {
+          'additional_paths_receive' => 'disable',
+          'additional_paths_send'    => 'disable',
+        },
+        {
+          'additional_paths_receive' => 'enable',
+          'additional_paths_send'    => 'enable',
+        },
+        {
+          'default_originate'           => 'true',
+          'default_originate_route_map' => 'my_def_map',
+          'disable_peer_as_check'       => 'true',
+        },
+        {
+          'max_prefix_interval'  => '30',
+          'max_prefix_limit'     => '100',
+          'max_prefix_threshold' => '50',
+        },
+        {
+          'next_hop_self'        => 'true',
+          'next_hop_third_party' => 'false',
+        },
+        {
+          'send_community'    => 'extended',
+          'suppress_inactive' => 'true',
+          'unsuppress_map'    => 'unsup_map',
+        },
+        { 'soft_reconfiguration_in' => 'always' },
+        { 'soft_reconfiguration_in' => 'enable' },
+        { 'soo' => '3:3' },
+        { 'weight' => '30' },
+        {
+          'advertise_map_exist' => ['admap', 'exist_map'],
+          'filter_list_in'      => 'flin',
+          'filter_list_out'     => 'flout',
+          'prefix_list_in'      => 'pfx_in',
+          'prefix_list_out'     => 'pfx_out',
+          'route_map_in'        => 'rm_in',
+          'route_map_out'       => 'rm_out',
+        },
+        { 'advertise_map_non_exist' => ['admap', 'non_exist_map'] },
+      ],
+    },
+    'L2VPN EVPN'   => {
+      title_pattern: '2 default 1.1.1.1 l2vpn evpn',
+      values:        [
+        {
+          'allowas_in' => true,
+          'allowas_in_max' => 5,
+        },
+        {
+          'max_prefix_interval'  => '30',
+          'max_prefix_limit'     => '100',
+          'max_prefix_threshold' => '50',
+        },
+        { 'send_community' => 'extended' },
+        { 'soft_reconfiguration_in' => 'always' },
+        { 'soft_reconfiguration_in' => 'enable' },
+        {
+          'filter_list_in'  => 'flin',
+          'filter_list_out' => 'flout',
+          'prefix_list_in'  => 'pfx_in',
+          'prefix_list_out' => 'pfx_out',
+          'route_map_in'    => 'rm_in',
+          'route_map_out'   => 'rm_out',
+        },
+      ],
+    },
+    'EBGP'         => {
+      title_pattern: '2 yellow 3.3.3.3 ipv4 unicast',
+      remote_as:     '2 yellow  3.3.3.3 3',
+      values:        [
+        { 'as_override' => 'true' },
+      ],
+    },
+    'IBGP'         => {
+      title_pattern: '2 green 2.2.2.2 ipv4 unicast',
+      remote_as:     '2 green  2.2.2.2 2',
+      values:        [
+        { 'route_reflector_client' => 'true' },
+      ],
+    },
+    'IBGP L2VPN'   => {
+      title_pattern: '2 default 2.2.2.2 l2vpn evpn',
+      remote_as:     '2 default  2.2.2.2 2',
+      values:        [
+        { 'route_reflector_client' => 'true' },
+      ],
+    },
 
-# tests[id] keys set by caller and used by test_harness_common:
-#
-# tests[id] keys set by caller:
-# tests[id][:desc] - a string to use with logs & debugs
-# tests[id][:manifest] - the complete manifest, as used by test_harness_common
-# tests[id][:resource] - a hash of expected states, used by test_resource
-# tests[id][:resource_cmd] - 'puppet resource' command to use with test_resource
-# tests[id][:show_pattern] - array of regexp patterns to use with test_show_cmd
-# tests[id][:ensure] - (Optional) set to :present or :absent before calling
-# tests[id][:code] - (Optional) override the default exit code in some tests.
-#
-# These keys are local use only and not used by test_harness_common:
-#
-# tests[id][:manifest_props] - This is essentially a master list of properties
-#   that permits re-use of the properties for both :present and :absent testing
-#   without destroying the list
-# tests[id][:resource_props] - This is essentially a master hash of properties
-#   that permits re-use of the properties for both :present and :absent testing
-#   without destroying the hash
-# tests[id][:title_pattern] - (Optional) defines the manifest title.
-#   Can be used with :af for mixed title/af testing. If mixing, :af values will
-#   be merged with title values and override any duplicates. If omitted,
-#   :title_pattern will be set to 'id'.
-# tests[id][:af] - (Optional) defines the address-family values.
-#   Must use :title_pattern if :af is not specified. Useful for testing mixed
-#   title/af manifests
-# tests[id][:remote_as] - (Optional) allows explicit remote-as configuration
-#   for some ebgp/ibgp-only testing
-#
-tests['default_properties'] = {
-  :desc           => '1.1 Default Properties',
-  :title_pattern  => '2 default 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    allowas_in                  => 'default',
-    allowas_in_max              => 'default',
-    default_originate           => 'default',
-    default_originate_route_map => 'default',
-    disable_peer_as_check       => 'default',
-    max_prefix_limit            => 'default',
-    max_prefix_threshold        => 'default',
-    max_prefix_interval         => 'default',
-    next_hop_self               => 'default',
-    next_hop_third_party        => 'default',
-    route_reflector_client      => 'default',
-    send_community              => 'default',
-    suppress_inactive           => 'default',
-    unsuppress_map              => 'default',
-    weight                      => 'default',
-    ",
-
-  # default_properties
-  :resource_props => {
-    'additional_paths_receive' => 'inherit',
-    'additional_paths_send'    => 'inherit',
-    'allowas_in'               => 'false',
-    'allowas_in_max'           => '3',
-    'as_override'              => 'false',
-    'default_originate'        => 'false',
-    'disable_peer_as_check'    => 'false',
-    'next_hop_self'            => 'false',
-    'next_hop_third_party'     => 'true',
-    'route_reflector_client'   => 'false',
-    'send_community'           => 'none',
-    'soft_reconfiguration_in'  => 'inherit',
-    'suppress_inactive'        => 'false',
   },
 }
 
-tests['default_properties_l2vpn'] = {
-  :desc           => '4.1 Default Properties',
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    allowas_in                  => 'default',
-    allowas_in_max              => 'default',
-    disable_peer_as_check       => 'default',
-    max_prefix_limit            => 'default',
-    max_prefix_threshold        => 'default',
-    max_prefix_interval         => 'default',
-    route_reflector_client      => 'default',
-    send_community              => 'default',
-    ",
-
-  # default_properties
-  :resource_props => {
-    'allowas_in'              => 'false',
-    'allowas_in_max'          => '3',
-    'disable_peer_as_check'   => 'false',
-    'route_reflector_client'  => 'false',
-    'send_community'          => 'none',
-    'soft_reconfiguration_in' => 'inherit',
-  },
-}
-
-tests['non_default_properties_A1'] = {
-  :desc           => "2.1.1 Non Default Properties: 'A1' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    allowas_in     => true,
-    allowas_in_max => 5,
-  ",
-  :resource_props => {
-    'ensure'         => 'present',
-    'allowas_in'     => 'true',
-    'allowas_in_max' => '5',
-  },
-}
-
-tests['non_default_properties_A1_l2vpn'] = {
-  :desc           => "5.1.1 Non Default Properties: 'A1' commands",
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    allowas_in     => true,
-    allowas_in_max => 5,
-  ",
-  :resource_props => {
-    'ensure'         => 'present',
-    'allowas_in'     => 'true',
-    'allowas_in_max' => '5',
-  },
-}
-
-tests['non_default_properties_A2'] = {
-  :desc           => "2.1.2 Non Default Properties: 'A2' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    additional_paths_receive => 'disable',
-    additional_paths_send    => 'disable',
-  ",
-  :resource_props => {
-    'ensure'                   => 'present',
-    'additional_paths_receive' => 'disable',
-    'additional_paths_send'    => 'disable',
-  },
-}
-
-tests['non_default_properties_A3'] = {
-  :desc           => "2.1.3 Non Default Properties: 'A3' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    additional_paths_receive => 'enable',
-    additional_paths_send    => 'enable',
-  ",
-  :resource_props => {
-    'ensure'                   => 'present',
-    'additional_paths_receive' => 'enable',
-    'additional_paths_send'    => 'enable',
-  },
-}
-
-tests['non_default_properties_D'] = {
-  :desc           => "2.3 Non Default Properties: 'D' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    default_originate           => true,
-    default_originate_route_map => 'my_def_map',
-    disable_peer_as_check       => true,
-  ",
-  :resource_props => {
-    'ensure'                      => 'present',
-    'default_originate'           => 'true',
-    'default_originate_route_map' => 'my_def_map',
-    'disable_peer_as_check'       => 'true',
-  },
-}
-
-tests['non_default_properties_M'] = {
-  :desc           => "2.4 Non Default Properties: 'M' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    max_prefix_limit     => 100,
-    max_prefix_threshold => 50,
-    max_prefix_interval  => 30,
-  ",
-  :resource_props => {
-    'ensure'               => 'present',
-    'max_prefix_interval'  => '30',
-    'max_prefix_limit'     => '100',
-    'max_prefix_threshold' => '50',
-  },
-}
-
-tests['non_default_properties_M_l2vpn'] = {
-  :desc           => "5.4 Non Default Properties: 'M' commands",
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    max_prefix_limit     => 100,
-    max_prefix_threshold => 50,
-    max_prefix_interval  => 30,
-  ",
-  :resource_props => {
-    'ensure'               => 'present',
-    'max_prefix_interval'  => '30',
-    'max_prefix_limit'     => '100',
-    'max_prefix_threshold' => '50',
-  },
-}
-
-tests['non_default_properties_N'] = {
-  :desc           => "2.5 Non Default Properties: 'N' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    next_hop_self        => true,
-    next_hop_third_party => false,
-  ",
-  :resource_props => {
-    'ensure'               => 'present',
-    'next_hop_self'        => 'true',
-    'next_hop_third_party' => 'false',
-  },
-}
-
-tests['non_default_properties_S1'] = {
-  :desc           => "2.6.1 Non Default Properties: 'S1' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    send_community    => 'extended',
-    suppress_inactive => true,
-    unsuppress_map    => 'unsup_map',
-  ",
-  :resource_props => {
-    'ensure'            => 'present',
-    'send_community'    => 'extended',
-    'suppress_inactive' => 'true',
-    'unsuppress_map'    => 'unsup_map',
-  },
-}
-
-tests['non_default_properties_S1_l2vpn'] = {
-  :desc           => "5.6.1 Non Default Properties: 'S1' commands",
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    send_community    => 'extended',
-  ",
-  :resource_props => {
-    'ensure'         => 'present',
-    'send_community' => 'extended',
-  },
-}
-
-tests['non_default_properties_S2'] = {
-  :desc           => "2.6.2 Non Default Properties: 'S2' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    soft_reconfiguration_in => 'always',
-  ",
-  :resource_props => {
-    'ensure'                  => 'present',
-    'soft_reconfiguration_in' => 'always',
-  },
-}
-
-tests['non_default_properties_S2_l2vpn'] = {
-  :desc           => "5.6.2 Non Default Properties: 'S2' commands",
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    soft_reconfiguration_in => 'always',
-  ",
-  :resource_props => {
-    'ensure'                  => 'present',
-    'soft_reconfiguration_in' => 'always',
-  },
-}
-
-tests['non_default_properties_S3'] = {
-  :desc           => "2.6.3 Non Default Properties: 'S3' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    soft_reconfiguration_in => 'enable',
-  ",
-  :resource_props => {
-    'ensure'                  => 'present',
-    'soft_reconfiguration_in' => 'enable',
-  },
-}
-
-tests['non_default_properties_S3_l2vpn'] = {
-  :desc           => "5.6.3 Non Default Properties: 'S3' commands",
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    soft_reconfiguration_in => 'enable',
-  ",
-  :resource_props => {
-    'ensure'                  => 'present',
-    'soft_reconfiguration_in' => 'enable',
-  },
-}
-
-tests['non_default_properties_W'] = {
-  :desc           => "2.7 Non Default Properties: 'W' commands",
-  :title_pattern  => '2 blue 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    weight => 30,
-  ",
-  :resource_props => {
-    'ensure' => 'present',
-    'weight' => '30',
-  },
-}
-
-tests['non_default_properties_ebgp_only'] = {
-  :desc           => "2.9 Non Default Properties: 'ebgp' commands",
-  :title_pattern  => '2 yellow 3.3.3.3 ipv4 unicast',
-  :remote_as      => '2 yellow  3.3.3.3 3',
-  :manifest_props => "
-    as_override => true,
-  ",
-  :resource_props => {
-    'as_override' => 'true',
-  },
-}
-
-tests['non_default_properties_ibgp_only'] = {
-  :desc           => "2.10 Non Default Properties: 'ibgp' commands",
-  :title_pattern  => '2 green 2.2.2.2 ipv4 unicast',
-  :remote_as      => '2 green  2.2.2.2 2',
-  :manifest_props => "
-    route_reflector_client => true,
-  ",
-  :resource_props => {
-    'route_reflector_client' => 'true',
-  },
-}
-
-tests['non_default_properties_ibgp_only_l2vpn'] = {
-  :desc           => "5.10 Non Default Properties: 'ibgp' commands",
-  :title_pattern  => '2 default 2.2.2.2 l2vpn evpn',
-  :remote_as      => '2 default  2.2.2.2 2',
-  :manifest_props => "
-    route_reflector_client => true,
-  ",
-  :resource_props => {
-    'route_reflector_client' => 'true',
-  },
-}
-
-tests['non_default_properties_vrf_only'] = {
-  :desc           => "2.11 Non Default Properties: 'vrf only' commands",
-  :title_pattern  => '2 purple 4.4.4.4 ipv4 unicast',
-  :manifest_props => "
-    soo => '3:3',
-  ",
-  :resource_props => {
-    'soo' => '3:3',
-  },
-}
-
-tests['non_default_misc_maps_part_1'] = {
-  :desc           => '2.12.1 Non Default Misc Map commands Part 1',
-  :title_pattern  => '2 default 1.1.1.1 ipv4 unicast',
-  :manifest_props => "
-    advertise_map_exist => ['admap', 'exist_map'],
-    filter_list_in      => 'flin',
-    filter_list_out     => 'flout',
-    prefix_list_in      => 'pfx_in',
-    prefix_list_out     => 'pfx_out',
-    route_map_in        => 'rm_in',
-    route_map_out       => 'rm_out',
-  ",
-  :resource_props => {
-    'advertise_map_exist' => '..admap., .exist_map..',
-    'filter_list_in'      => 'flin',
-    'filter_list_out'     => 'flout',
-    'prefix_list_in'      => 'pfx_in',
-    'prefix_list_out'     => 'pfx_out',
-    'route_map_in'        => 'rm_in',
-    'route_map_out'       => 'rm_out',
-  },
-}
-
-tests['non_default_misc_maps_part_1_l2vpn'] = {
-  :desc           => '5.12.1 Non Default Misc Map commands Part 1',
-  :title_pattern  => '2 default 1.1.1.1 l2vpn evpn',
-  :manifest_props => "
-    filter_list_in      => 'flin',
-    filter_list_out     => 'flout',
-    prefix_list_in      => 'pfx_in',
-    prefix_list_out     => 'pfx_out',
-    route_map_in        => 'rm_in',
-    route_map_out       => 'rm_out',
-  ",
-  :resource_props => {
-    'filter_list_in'  => 'flin',
-    'filter_list_out' => 'flout',
-    'prefix_list_in'  => 'pfx_in',
-    'prefix_list_out' => 'pfx_out',
-    'route_map_in'    => 'rm_in',
-    'route_map_out'   => 'rm_out',
-  },
-}
-
-tests['non_default_misc_maps_part_2'] = {
-  :desc           => '2.12.2 Non Default Misc Map commands Part 2',
-  :title_pattern  => '2 default 2.2.2.2 ipv4 unicast',
-  :manifest_props => "
-    advertise_map_non_exist => ['admap', 'non_exist_map'],
-  ",
-  :resource_props => {
-    'advertise_map_non_exist' => '..admap., .non_exist_map..',
-  },
-}
-
-tests['title_patterns'] = {
-  :manifest_props => '',
-  :resource_props => { 'ensure' => 'present' },
-}
 
 #################################################################
 # HELPER FUNCTIONS
@@ -495,44 +245,26 @@ def puppet_resource_cmd(af)
   UtilityLib.get_namespace_cmd(agent, cmd, options)
 end
 
-# Search pattern for show run config testing
-def af_pattern(tests, id, af)
-  asn, vrf, nbr, afi, safi = af.values
-  if tests[id][:ensure] == :present
-    if vrf[/default/]
-      [/router bgp #{asn}/, /neighbor #{nbr}/,
-       /address-family #{afi} #{safi}/]
-    else
-      [/router bgp #{asn}/, /vrf #{vrf}/, /neighbor #{nbr}/,
-       /address-family #{afi} #{safi}/]
-    end
-  else
-    if vrf[/default/]
-      [/router bgp #{asn}/, /neighbor #{nbr}/]
-    else
-      [/router bgp #{asn}/, /vrf #{vrf}/, /neighbor #{nbr}/]
-    end
-  end
-end
-
 # Create actual manifest for a given test scenario.
-def build_manifest_bgp_nbr_af(tests, id)
-  manifest = prop_hash_to_manifest(tests[id][:af])
-  if tests[id][:ensure] == :absent
+def build_manifest_bgp_nbr_af(testcase, label)
+  manifest = prop_hash_to_manifest(testcase[:af])
+  if testcase[:ensure] == :absent
     state = 'ensure => absent,'
-    tests[id][:resource] = { 'ensure' => 'absent' }
+    testcase[:resource] = { 'ensure' => 'absent' }
   else
     state = 'ensure => present,'
-    manifest += tests[id][:manifest_props]
-    tests[id][:resource] = tests[id][:resource_props]
+    testcase[:inputs].each do |key, value|
+      manifest += "\n#{key} => '#{value}',"
+    end
+    testcase[:resource] = testcase[:outputs]
   end
 
-  tests[id][:title_pattern] = id if tests[id][:title_pattern].nil?
+  testcase[:title_pattern] = label if testcase[:title_pattern].nil?
   logger.debug("build_manifest_bgp_nbr_af :: title_pattern:\n" +
-               tests[id][:title_pattern])
-  tests[id][:manifest] = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
+               testcase[:title_pattern])
+  testcase[:manifest] = "cat <<EOF >#{UtilityLib::PUPPETMASTER_MANIFESTPATH}
   node 'default' {
-    cisco_bgp_neighbor_af { '#{tests[id][:title_pattern]}':
+    cisco_bgp_neighbor_af { '#{testcase[:title_pattern]}':
       #{state}
       #{manifest}
     }
@@ -542,22 +274,27 @@ end
 
 # Wrapper for bgp_nbr_af specific settings prior to calling the
 # common test_harness.
-def test_harness_bgp_nbr_af(tests, id)
-  af = bgp_title_pattern_munge(tests, id, 'bgp_neighbor_af')
-  logger.info("\n--------\nTest Case Address-Family ID: #{af}")
+def test_harness_bgp_nbr_af(tests)
+  tests[:default_value_tests].each do |label, testcase|
+    # TODO for title pattern tests
+    af = bgp_title_pattern_munge_new(testcase, label, 'bgp_neighbor_af')
+    logger.info("\n--------\nTest Case Address-Family ID: #{af}")
 
-  # Set up remote-as if necessary
-  bgp_nbr_remote_as(agent, tests[id][:remote_as]) if tests[id][:remote_as]
+    # Set up remote-as if necessary
+    bgp_nbr_remote_as(agent, testcase[:remote_as]) if testcase[:remote_as]
 
-  tests[id][:ensure] = :present if tests[id][:ensure].nil?
-  tests[id][:show_pattern] = af_pattern(tests, id, af)
-  tests[id][:resource_cmd] = puppet_resource_cmd(af)
+    testcase[:ensure] = :present if testcase[:ensure].nil?
+    testcase[:resource_cmd] = puppet_resource_cmd(af)
 
-  # Build the manifest for this test
-  build_manifest_bgp_nbr_af(tests, id)
+    # Build the manifest for this test
+    build_manifest_bgp_nbr_af(testcase, label)
 
-  test_harness_common(tests, id)
-  tests[id][:ensure] = nil
+    test_harness_common_new(testcase, label, tests)
+    testcase[:ensure] = nil
+  end
+
+  # TODO: iterate over non_default_value_tests
+  # TODO: title_pattern tests
 end
 
 #################################################################
@@ -568,6 +305,9 @@ test_name "TestCase :: #{testheader}" do
   logger.info("\n#{'-' * 60}\nSection 1. Default Property Testing")
   node_feature_cleanup(agent, 'bgp')
 
+  test_harness_bgp_nbr_af(tests)
+
+=begin
   # -----------------------------------
   id = 'default_properties'
   test_harness_bgp_nbr_af(tests, id)
@@ -655,7 +395,11 @@ test_name "TestCase :: #{testheader}" do
   # Special Cases
   test_harness_bgp_nbr_af(tests, 'non_default_properties_ibgp_only_l2vpn')
   test_harness_bgp_nbr_af(tests, 'non_default_misc_maps_part_1_l2vpn')
+=end
 
+
+# TODO
+=begin
   # -------------------------------------------------------------------
   logger.info("\n#{'-' * 60}\nSection 6. L2VPN Title Pattern Testing")
   node_feature_cleanup(agent, 'bgp')
@@ -690,6 +434,7 @@ test_name "TestCase :: #{testheader}" do
   tests[id][:title_pattern] = '2 default 5.5.5.5 l2vpn evpn'
   tests[id].delete(:af)
   test_harness_bgp_nbr_af(tests, id)
+=end
 end
 
 logger.info("TestCase :: #{testheader} :: End")

@@ -224,11 +224,30 @@ def test_harness_common(tests, id)
   tests[id].delete(:log_desc)
 end
 
+def test_harness_common_new(testcase, label, tests)
+  testcase[:ensure] = :present if testcase[:ensure].nil?
+  testcase[:state] = false if testcase[:state].nil?
+  testcase[:desc] = '' if testcase[:desc].nil?
+  testcase[:log_desc] = testcase[:desc] + " [ensure => #{testcase[:ensure]}]"
+  logger.info("\n--------\n#{testcase[:log_desc]}")
+
+  test_manifest_new(testcase, label, tests)
+  test_resource_new(testcase, label, tests)
+  test_idempotence_new(testcase, label, tests)
+  testcase.delete(:log_desc)
+end
+
 # Wrapper for formatting test log entries
 def format_stepinfo(tests, id, test_str)
   logger.debug("format_stepinfo :: (#{tests[id][:desc]}) (#{test_str})")
   tests[id][:log_desc] = tests[id][:desc] if tests[id][:log_desc].nil?
   tests[id][:log_desc] + sprintf(' :: %-12s', test_str)
+end
+
+def format_stepinfo_new(testcase, label, test_str)
+  logger.debug("format_stepinfo :: (#{testcase[:desc]}) (#{test_str})")
+  testcase[:log_desc] = testcase[:desc] if testcase[:log_desc].nil?
+  testcase[:log_desc] + sprintf(' :: %-12s', test_str)
 end
 
 # Wrapper for manifest tests
@@ -246,6 +265,19 @@ def test_manifest(tests, id)
   tests[id].delete(:log_desc)
 end
 
+def test_manifest_new(testcase, label, tests)
+  stepinfo = format_stepinfo_new(testcase, label, 'MANIFEST')
+  step "TestStep :: #{stepinfo}" do
+    logger.debug("test_manifest :: manifest:\n#{testcase[:manifest]}")
+    on(tests[:master], testcase[:manifest])
+    code = testcase[:code] ? testcase[:code] : [2]
+    logger.debug('test_manifest :: check puppet agent cmd')
+    on(tests[:agent], puppet_agent_cmd, acceptable_exit_codes: code)
+  end
+  logger.info("#{stepinfo} :: PASS")
+  testcase.delete(:log_desc)
+end
+
 # Wrapper for 'puppet resource' command tests
 def test_resource(tests, id)
   stepinfo = format_stepinfo(tests, id, 'RESOURCE')
@@ -257,6 +289,19 @@ def test_resource(tests, id)
     end
     logger.info("#{stepinfo} :: PASS")
     tests[id].delete(:log_desc)
+  end
+end
+
+def test_resource_new(testcase, label, tests)
+  stepinfo = format_stepinfo_new(testcase, label, 'RESOURCE')
+  step "TestStep :: #{stepinfo}" do
+    logger.debug("test_resource :: cmd:\n#{testcase[:resource_cmd]}")
+    on(tests[:agent], testcase[:resource_cmd]) do
+      UtilityLib.search_pattern_in_output(stdout, testcase[:resource],
+                                          false, self, logger)
+    end
+    logger.info("#{stepinfo} :: PASS")
+    testcase.delete(:log_desc)
   end
 end
 
@@ -288,11 +333,22 @@ def test_idempotence(tests, id)
   end
 end
 
+def test_idempotence_new(testcase, label, tests)
+  stepinfo = format_stepinfo_new(testcase, label, 'IDEMPOTENCE')
+  step "TestStep :: #{stepinfo}" do
+    logger.debug('test_idempotence :: BEGIN')
+    on(tests[:agent], puppet_agent_cmd, acceptable_exit_codes: [0])
+    logger.info("#{stepinfo} :: PASS")
+    testcase.delete(:log_desc)
+  end
+end
+
 # Method to clean up a feature on the test node
 # @param agent [String] the agent that is going to run the test
 # @param feature [String] the feature name that will be cleaned up
 def node_feature_cleanup(agent, feature, stepinfo='feature cleanup',
                          enable=true)
+  return if fact_on(agent, 'os.name') == 'ios_xr'
   step "TestStep :: #{stepinfo}" do
     logger.debug("#{stepinfo} disable feature")
     clean = UtilityLib.get_vshell_cmd("conf t ; no feature #{feature}")
@@ -344,6 +400,29 @@ def bgp_title_pattern_munge(tests, id, provider=nil)
     t[:asn], t[:vrf], t[:neighbor], t[:afi], t[:safi] = title.split
   end
   t.merge!(tests[id][:af])
+  t[:vrf] = 'default' if t[:vrf].nil?
+  t
+end
+
+def bgp_title_pattern_munge_new(testcase, label, provider=nil)
+  title = testcase[:title_pattern]
+  af = testcase[:af]
+
+  if title.nil?
+    puts 'no title'
+    return af
+  end
+
+  testcase[:af] = {} if af.nil?
+  t = {}
+
+  case provider
+  when 'bgp_af'
+    t[:asn], t[:vrf], t[:afi], t[:safi] = title.split
+  when 'bgp_neighbor_af'
+    t[:asn], t[:vrf], t[:neighbor], t[:afi], t[:safi] = title.split
+  end
+  t.merge!(testcase[:af])
   t[:vrf] = 'default' if t[:vrf].nil?
   t
 end
