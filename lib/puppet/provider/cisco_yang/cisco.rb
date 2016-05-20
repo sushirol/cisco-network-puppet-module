@@ -1,6 +1,6 @@
 require 'rubygems'
 require 'json'
-require 'puppet/node/client'
+require 'cisco_node_utils' if Puppet.features.cisco_node_utils?
 
 Puppet::Type.type(:cisco_yang).provide(:cisco) do
   desc "IOS-XR configuration management via YANG."
